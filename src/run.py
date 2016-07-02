@@ -1,5 +1,5 @@
 
-import sys, yaml, json, MySQLdb
+import sys, json, MySQLdb
 
 from src.utils import logger, getCliHelpText, parseOptions, parseYamlFile
 from src.data_gen import DataGen
@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     if inputConfig["engine"] == "mysql":
 
-        from src.schema.builders.mysql import MysqlSchemaBuilder as SchemaBuilder
+        from src.schema_builders.mysql import MysqlSchemaBuilder as SchemaBuilder
         from src.writers.mysql import MysqlWriter as Writer
         from src.contexts.mysql import MysqlContext as Context
 
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     schemaForDatagen = SchemaBuilder(ctx).getSchemaForDatagen()
     logger.debug("Schema for data generation\n{}".format(json.dumps(schemaForDatagen, indent=4, sort_keys=True)))
 
-    writer = Writer(conn)
+    writer = Writer(ctx)
     dataGen = DataGen(ctx)
 
     for results in dataGen.generate(schemaForDatagen):

@@ -1,5 +1,5 @@
 
-from src.schema.builders.abstract import AbstractSchemaBuilder
+from src.schema_builders.abstract import AbstractSchemaBuilder
 
 class MysqlSchemaBuilder(AbstractSchemaBuilder):
 
