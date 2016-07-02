@@ -1,0 +1,22 @@
+
+engine: mysql
+
+host: localhost
+user: jseeder
+password: jseeder
+database: fabric
+port: 3306
+
+includeTables:
+    -
+        table: master_cities
+        seedSize: 100
+    -
+        table: master_states
+        seedSize: 100
+    -
+        table: master_countries
+        seedSize: 100
+    -
+        table: master_localities
+        seedSize: 100

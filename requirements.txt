@@ -1,0 +1,3 @@
+PyYAML
+MySQL-python
+fake-factory
