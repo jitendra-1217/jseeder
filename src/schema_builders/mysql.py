@@ -26,7 +26,7 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
         cursor = ctx.getCursor()
         inputConfig = ctx.getInputConfig()
 
-        return self._getOrderedByDependency({t["table"]: self._getSchemaForTable(cursor, inputConfig["database"], t) for t in inputConfig["includeTables"]})
+        return self._getOrderedByDependency({t: self._getSchemaForTable(cursor, inputConfig["database"], t, tConfig) for t, tConfig in inputConfig["includeTables"].items()})
 
 
 
@@ -34,12 +34,12 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
     # Private methods (Meant to be used inside this class only)
 
 
-    def _getSchemaForTable(self, cursor, database, tableConfig):
+    def _getSchemaForTable(self, cursor, database, t, tConfig):
 
         s = {}
 
         # Get all table fields with their meta
-        cursor.execute("DESCRIBE {}".format(tableConfig["table"]))
+        cursor.execute("DESCRIBE {}".format(t))
         results = cursor.fetchall()
         for result in results:
             # Ignore if the field is auto_increment type
@@ -54,7 +54,7 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
             }
 
         # Get references and update seeder and other field schema attrs
-        cursor.execute("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '{}' AND TABLE_NAME = '{}'".format(database, tableConfig["table"]))
+        cursor.execute("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '{}' AND TABLE_NAME = '{}'".format(database, t))
         results = cursor.fetchall()
         for result in results:
             # Ignore if the column is not already in schema

@@ -41,7 +41,7 @@ if __name__ == "__main__":
     #     4. The batch data from DataGen to be passed to writer
 
     schemaForDatagen = SchemaBuilder(ctx).getSchemaForDataGen()
-    logger.debug("Schema for data generation\n{}".format(json.dumps(schemaForDatagen, indent=4, sort_keys=True)))
+    logger.debug("Schema for data generation:\n{}".format(json.dumps(schemaForDatagen)))
 
     writer = Writer(ctx)
     dataGen = DataGen(ctx)
