@@ -36,7 +36,7 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
 
     def _getSchemaForTable(self, cursor, database, t, tConfig):
 
-        s = {}
+        tSchema = {}
 
         # Get all table fields with their meta
         cursor.execute("DESCRIBE {}".format(t))
@@ -46,7 +46,7 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
             if result["Extra"] == "auto_increment":
                 continue
             defSeeder, defSeederArgs = self._mapSeederByMysqlDatatype(result["Type"])
-            s[result["Field"]] = {
+            tSchema[result["Field"]] = {
                 # Assign default seeder func mapped via mysql data types
                 "seeder":       defSeeder,
                 "seederArgs":   defSeederArgs,
@@ -58,16 +58,17 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
         results = cursor.fetchall()
         for result in results:
             # Ignore if the column is not already in schema
-            if result["COLUMN_NAME"] not in s:
+            if result["COLUMN_NAME"] not in tSchema:
                 continue
             # Update seeder, seederArgs and dependencies
-            s[result["COLUMN_NAME"]]["seederArgs"] = s[result["COLUMN_NAME"]]["dependencies"] = {
+            tSchema[result["COLUMN_NAME"]]["dependencies"] = {
                 "table": result["REFERENCED_TABLE_NAME"],
                 "field": result["REFERENCED_COLUMN_NAME"]
             }
-            s[result["COLUMN_NAME"]]["seeder"] = "mysql.seedFromTableRef"
+            tSchema[result["COLUMN_NAME"]]["seeder"] = "mysql.seedFromTableRef"
+            tSchema[result["COLUMN_NAME"]]["seederArgs"] = [result["REFERENCED_TABLE_NAME"], result["REFERENCED_COLUMN_NAME"]]
 
-        return s
+        return tSchema
 
 
     # BUG: Self referencing tables leading to infinite loop while resolving dependencies
@@ -75,16 +76,16 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
 
         tOrder = {}
         includeTables = tSchema.keys()
-        m = {t: False for t in includeTables}
-        i = len(includeTables)
+        tMap = {t: False for t in includeTables}
+        tLen = len(includeTables)
 
-        while i > 0:
+        while tLen > 0:
             for t in includeTables:
                 td = [v["dependencies"]["table"] for f, v in tSchema[t].items() if "table" in v["dependencies"]]
-                if len([k for k in td if k in m and m[k] == False]) == 0 and m[t] == False:
-                    m[t] = True
-                    tOrder[i] = t
-                    i -= 1
+                if len([k for k in td if k in tMap and tMap[k] == False]) == 0 and tMap[t] == False:
+                    tMap[t] = True
+                    tOrder[tLen] = t
+                    tLen -= 1
 
         return (tOrder, tSchema)
 

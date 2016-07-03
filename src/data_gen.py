@@ -1,19 +1,17 @@
 
-# Notes:
-# - While calling any seeder util/func/method, if it requires pass the self.ctx object
-#   for it to use.
-# - **Try cleaning ctx.cache after every table is processed
+from src.utils import logger, cache
 
-from src.utils import logger
-from src.seeders import callSeederFunc
 
 class DataGen():
 
     # Class constants
     kDocBatchCount = 1000
 
+
     def __init__(self, ctx):
         self.ctx = ctx
+
+        self.seeder = self.ctx.getSeeder()
 
 
     # From run.py >
@@ -30,22 +28,27 @@ class DataGen():
 
     def _workForTable(self, table, fieldsSchema):
 
-        logger.debug("Will start generating data for: {}".format(table))
         inputConfig = self.ctx.getInputConfig()
         numOfDocsToGen = inputConfig["includeTables"][table]["seedSize"]
-        logger.debug("Will generate {} number of documents".format(numOfDocsToGen))
+        logger.info("Will generate {} documents for {}..".format(numOfDocsToGen, table))
 
+        # Following code does following:
+        # - Creates given "numbers of" documents "in batch" usign given "schema of table and it's fields"
+        # - Fields schema has info on what seeder to call
+        # - Finally it returns the list of dict
         numOfDocsWorked = 0
-        d = numOfDocsToGen - numOfDocsWorked
-        while d > 0:
-            c = DataGen.kDocBatchCount if DataGen.kDocBatchCount < d else d
-            numOfDocsWorked += c
-            d = numOfDocsToGen - numOfDocsWorked
+        diff = numOfDocsToGen - numOfDocsWorked
+        while diff > 0:
+            localBatchCount = DataGen.kDocBatchCount if DataGen.kDocBatchCount < diff else diff
+            numOfDocsWorked += localBatchCount
+            diff = numOfDocsToGen - numOfDocsWorked
             docs = []
-            while c > 0:
+            while localBatchCount > 0:
                 doc = {}
                 for f, fSchema in fieldsSchema.items():
-                    doc[f] = callSeederFunc(fSchema["seeder"], fSchema["seederArgs"])
+                    doc[f] = self.seeder.callSeederFunc(fSchema["seeder"], fSchema["seederArgs"])
                 docs.append(doc)
-                c -= 1
+                localBatchCount -= 1
             yield {"docs": docs, "table": table}
+        # Emptying cache after every table seed..
+        cache.emptyCache()

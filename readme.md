@@ -8,3 +8,19 @@
     |__/                                           
 
 --
+
+##Using
+
+Run `python src/run.py -h`
+
+
+##Change logs:
+
+###v0.0.0
+
+- Minimal working seeder for mysql
+ - Takes input a config file (.yaml) which specifies things eg. - Tables to include. Per table configs - seed size. Column specific configs - which particular seeder to use etc...
+ - Works per database: Resolves foreign key relationships across tables automatically
+- Code structure abstracted for it to be extended:
+ - for other engines eg. mongodb, postgres etc.
+ - for adding custom seeders and use in config file

@@ -1,5 +1,7 @@
 # All contexts must extend this class
 
+from src.seeders import Seeder
+
 class AbstractContext():
 
 
@@ -7,8 +9,8 @@ class AbstractContext():
         self.conn = conn
         self.inputConfig = inputConfig
 
-        # Used as a temp storage of re-usable dicts
-        self.cache = {}
+        # Create seeder instance
+        self.seeder = Seeder()
 
 
     def getConn(self):
@@ -19,21 +21,5 @@ class AbstractContext():
         return self.inputConfig
 
 
-    # --------------------
-    # Methods for self.cache operations
-    def getCacheKey(self, key):
-        return self.cache.get(key, None)
-
-
-    def setCacheKey(self, key, val):
-        self.cache[key] = val
-
-        return self
-
-
-    def emptyCache(self):
-        self.cache = {}
-
-        return self
-
-    # --------------------
+    def getSeeder(self):
+        return self.seeder
