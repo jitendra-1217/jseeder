@@ -9,8 +9,7 @@ if __name__ == "__main__":
     inputFile = parseOptions(sys.argv[1:])
     inputConfig = parseYamlFile(inputFile)
 
-    # -------------------- TODO 1
-    # Validate inputConfig
+    # TODO: Validate inputConfig
 
     if inputConfig["engine"] == "mysql":
 
@@ -19,8 +18,13 @@ if __name__ == "__main__":
         from src.contexts.mysql import MysqlContext as Context
 
         # Init variables for context object
-        conn = MySQLdb.connect(inputConfig["host"], inputConfig["user"], inputConfig["password"], inputConfig["database"], inputConfig["port"])
-
+        conn = MySQLdb.connect(
+            inputConfig["host"],
+            inputConfig["user"],
+            inputConfig["password"],
+            inputConfig["database"],
+            inputConfig["port"]
+        )
         ctx = Context(conn, inputConfig)
 
     else:

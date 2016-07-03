@@ -31,5 +31,4 @@ def callSeederFunc(fName, fArgsList=[]):
     if fName in seedersMap:
         return seedersMap[fName](*fArgsList)
 
-    # TODO: Else throw error and be catched and logged as warning?
-    return "INVALID"
+    raise Exception("Seeder func: {} - Not found".format(fName))

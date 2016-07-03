@@ -7,23 +7,11 @@ password: jseeder
 database: fabric
 port: 3306
 
-# includeTables:
-#     -
-#         table: master_cities
-#         seedSize: 100
-#     -
-#         table: master_states
-#         seedSize: 100
-#     -
-#         table: master_countries
-#         seedSize: 100
-#     -
-#         table: master_localities
-#         seedSize: 100
-
 includeTables:
     master_cities:
         seedSize: 100
+        # Other configs per table may follow..
+        # Also column specific config can also follow in same pattern..
     master_countries:
         seedSize: 100
     master_states:
