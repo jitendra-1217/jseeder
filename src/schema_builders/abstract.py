@@ -7,6 +7,10 @@ class AbstractSchemaBuilder():
         self.ctx = ctx
 
 
+    def getCtx(self):
+        return self.ctx
+
+
     # Get schema to be used by data generator
-    def getSchemaForDatagen(self):
+    def getSchemaForDataGen(self):
         raise NotImplementedError

@@ -1,6 +1,8 @@
 
 from src.schema_builders.abstract import AbstractSchemaBuilder
 
+import re
+
 class MysqlSchemaBuilder(AbstractSchemaBuilder):
 
 
@@ -18,5 +20,83 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
     #     - Each key schema tells:
     #         - What seeder to use
     #         - And arguments required for the seeder (Must be ensured via code)
-    def getSchemaForDatagen(self):
-        pass
+    def getSchemaForDataGen(self):
+
+        ctx = self.getCtx()
+        cursor = ctx.getCursor()
+        inputConfig = ctx.getInputConfig()
+
+        return self._getOrderedByDependency({t["table"]: self._getSchemaForTable(cursor, inputConfig["database"], t) for t in inputConfig["includeTables"]})
+
+
+
+    # --------------------
+    # Private methods (Meant to be used inside this class only)
+
+
+    def _getSchemaForTable(self, cursor, database, tableConfig):
+
+        s = {}
+
+        # Get all table fields with their meta
+        cursor.execute("DESCRIBE {}".format(tableConfig["table"]))
+        results = cursor.fetchall()
+        for result in results:
+            # Ignore if the field is auto_increment type
+            if result["Extra"] == "auto_increment":
+                continue
+            defSeeder, defSeederArgs = self._mapSeederByMysqlDatatype(result["Type"])
+            s[result["Field"]] = {
+                # Assign default seeder func mapped via mysql data types
+                "seeder":       defSeeder,
+                "seederArgs":   defSeederArgs,
+                "dependencies": {}
+            }
+
+        # Get references and update seeder and other field schema attrs
+        cursor.execute("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '{}' AND TABLE_NAME = '{}'".format(database, tableConfig["table"]))
+        results = cursor.fetchall()
+        for result in results:
+            # Ignore if the column is not already in schema
+            if result["COLUMN_NAME"] not in s:
+                continue
+            # Update seeder, seederArgs and dependencies
+            s[result["COLUMN_NAME"]]["seederArgs"] = s[result["COLUMN_NAME"]]["dependencies"] = {
+                "table": result["REFERENCED_TABLE_NAME"],
+                "field": result["REFERENCED_COLUMN_NAME"]
+            }
+            s[result["COLUMN_NAME"]]["seeder"] = "mysql.seedFromTableRef"
+
+        return s
+
+
+    # BUG: Self referencing tables leading to infinite loop while resolving dependencies
+    def _getOrderedByDependency(self, tSchema):
+
+        tOrder = {}
+        includeTables = tSchema.keys()
+        m = {t: False for t in includeTables}
+        i = len(includeTables)
+
+        while i > 0:
+            for t in includeTables:
+                td = [v["dependencies"]["table"] for f, v in tSchema[t].items() if "table" in v["dependencies"]]
+                if len([k for k in td if k in m and m[k] == False]) == 0 and m[t] == False:
+                    m[t] = True
+                    tOrder[i] = t
+                    i -= 1
+
+        return (tOrder, tSchema)
+
+
+    def _mapSeederByMysqlDatatype(self, type):
+
+        m = re.search("varchar\((.+?)\)", type)
+        if m:
+            return ("fake.text", m.group(1))
+
+        # Other regex might follow..
+
+        # Otherwise returning something which will throw errors later.. :(
+        # OR, Better should throw error here only
+        return (type, {})

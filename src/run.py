@@ -40,7 +40,7 @@ if __name__ == "__main__":
     #         2. Yield batch of documents containing document with key & value.
     #     4. The batch data from DataGen to be passed to writer
 
-    schemaForDatagen = SchemaBuilder(ctx).getSchemaForDatagen()
+    schemaForDatagen = SchemaBuilder(ctx).getSchemaForDataGen()
     logger.debug("Schema for data generation\n{}".format(json.dumps(schemaForDatagen, indent=4, sort_keys=True)))
 
     writer = Writer(ctx)
