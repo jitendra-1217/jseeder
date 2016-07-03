@@ -7,7 +7,19 @@ from src.utils import logger
 
 # Prints help
 def getCliHelpText():
-    return "This should print help on console!"
+
+    helpText = """
+        Help:
+
+        - Run using `python src/run.py -i <Absolute input file path>`
+        - Run tests using `python tests/__init__.py`
+        - Ref to following url on writing input config file:
+          https://github.com/jitendra-1217/jseeder/blob/master/src/configs/input/sample.yaml
+
+        *Readme to be added..
+        """
+
+    return helpText
 
 
 # Parses cli options

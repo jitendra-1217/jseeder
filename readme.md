@@ -9,6 +9,10 @@
 
 --
 
+##Using
+
+Run `python src/run.py -h`
+
 
 ##Change logs:
 
