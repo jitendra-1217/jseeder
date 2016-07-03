@@ -33,10 +33,10 @@ class Seeder():
         raise Exception("Seeder func: {} - Not found".format(fName))
 
 
-    def setUpMySQLSeeders(self):
+    def setUpMySQLSeeders(self, conn):
 
         from src.seeders.mysql import MySQL
-        mysql = MySQL()
+        mysql = MySQL(conn)
         self.seedersMap.update({
             "mysql.seedFromTableRef": mysql.seedFromTableRef
         })

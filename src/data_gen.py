@@ -1,15 +1,12 @@
 
-# Notes:
-# - While calling any seeder util/func/method, if it requires pass the self.ctx object
-#   for it to use.
-# - **Try cleaning ctx.cache after every table is processed
+from src.utils import logger, cache
 
-from src.utils import logger
 
 class DataGen():
 
     # Class constants
     kDocBatchCount = 1000
+
 
     def __init__(self, ctx):
         self.ctx = ctx
@@ -53,3 +50,5 @@ class DataGen():
                 docs.append(doc)
                 localBatchCount -= 1
             yield {"docs": docs, "table": table}
+        # Emptying cache after every table seed..
+        cache.emptyCache()

@@ -61,11 +61,12 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
             if result["COLUMN_NAME"] not in tSchema:
                 continue
             # Update seeder, seederArgs and dependencies
-            tSchema[result["COLUMN_NAME"]]["seederArgs"] = tSchema[result["COLUMN_NAME"]]["dependencies"] = {
+            tSchema[result["COLUMN_NAME"]]["dependencies"] = {
                 "table": result["REFERENCED_TABLE_NAME"],
                 "field": result["REFERENCED_COLUMN_NAME"]
             }
             tSchema[result["COLUMN_NAME"]]["seeder"] = "mysql.seedFromTableRef"
+            tSchema[result["COLUMN_NAME"]]["seederArgs"] = [result["REFERENCED_TABLE_NAME"], result["REFERENCED_COLUMN_NAME"]]
 
         return tSchema
 

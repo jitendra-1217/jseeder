@@ -1,18 +1,26 @@
 
+from src.utils import cache, logger
+
+import random, MySQLdb
+
 
 class MySQL():
 
-    def __init__(self):
-        pass
+
+    def __init__(self, conn):
+        self.conn = conn
+        self.cursor = self.conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
 
 
-    @classmethod
     def seedFromTableRef(self, table, field):
 
-        # Check in cache - How?
-        # Cache miss?
-        #     Get by running mysql query
-        #     Put in cache
-        # Return random
+        cacheKey = "seedFromTableRef___{}___{}".format(table, field)
+        hit      = cache.getCacheKey(cacheKey)
 
-        return 1
+        if not hit:
+            logger.debug("Queries into table for {}".format(cacheKey))
+            self.cursor.execute("SELECT {} FROM {}".format(field, table))
+            hit = [result[field] for result in self.cursor.fetchall()]
+            cache.setCacheKey(cacheKey, hit)
+
+        return random.choice(hit)

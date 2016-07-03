@@ -30,7 +30,7 @@ class MysqlIntegrationTest(unittest.TestCase):
                     'seedSize': 100
                 },
                 'cities': {
-                    'seedSize': 2000
+                    'seedSize': 10
                 }
             }
         }
