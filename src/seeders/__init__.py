@@ -15,10 +15,21 @@ fake = Factory.create()
 
 
 seedersMap = {
-    "fake.name":    fake.name
-    "fake.address": fake.address
+    "fake.name":    fake.name,
+    "fake.address": fake.address,
+    "fake.text":    fake.text
     # More from fake-factor library can follow..
 
 
     # Functions from other modules can follow here..
 }
+
+
+# Util to call seeder funcs
+def callSeederFunc(fName, fArgsList=[]):
+
+    if fName in seedersMap:
+        return seedersMap[fName](*fArgsList)
+
+    # TODO: Else throw error and be catched and logged as warning?
+    return "INVALID"

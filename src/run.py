@@ -40,13 +40,14 @@ if __name__ == "__main__":
     #         2. Yield batch of documents containing document with key & value.
     #     4. The batch data from DataGen to be passed to writer
 
-    schemaForDatagen = SchemaBuilder(ctx).getSchemaForDataGen()
+    orderInfo, schemaForDatagen = SchemaBuilder(ctx).getSchemaForDataGen()
     logger.debug("Schema for data generation:\n{}".format(json.dumps(schemaForDatagen)))
+    logger.debug("Will be worked in order:\n{}".format(json.dumps(orderInfo)))
 
     writer = Writer(ctx)
     dataGen = DataGen(ctx)
 
-    for results in dataGen.generate(schemaForDatagen):
+    for results in dataGen.generate(schemaForDatagen, orderInfo):
         logger.info("Writing {} documents into {}..".format(len(results["docs"]), results["table"]))
         writer.doBulkWrite(results["table"], results["docs"])
 

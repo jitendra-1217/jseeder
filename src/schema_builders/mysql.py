@@ -93,10 +93,10 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
 
         m = re.search("varchar\((.+?)\)", type)
         if m:
-            return ("fake.text", m.group(1))
+            return ("fake.text", [int(m.group(1))])
 
         # Other regex might follow..
 
         # Otherwise returning something which will throw errors later.. :(
         # OR, Better should throw error here only
-        return (type, {})
+        return (type, [])
