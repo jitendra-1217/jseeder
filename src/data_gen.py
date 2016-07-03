@@ -5,7 +5,6 @@
 # - **Try cleaning ctx.cache after every table is processed
 
 from src.utils import logger
-from src.seeders import callSeederFunc
 
 class DataGen():
 
@@ -14,6 +13,8 @@ class DataGen():
 
     def __init__(self, ctx):
         self.ctx = ctx
+
+        self.seeder = self.ctx.getSeeder()
 
 
     # From run.py >
@@ -48,7 +49,7 @@ class DataGen():
             while localBatchCount > 0:
                 doc = {}
                 for f, fSchema in fieldsSchema.items():
-                    doc[f] = callSeederFunc(fSchema["seeder"], fSchema["seederArgs"])
+                    doc[f] = self.seeder.callSeederFunc(fSchema["seeder"], fSchema["seederArgs"])
                 docs.append(doc)
                 localBatchCount -= 1
             yield {"docs": docs, "table": table}

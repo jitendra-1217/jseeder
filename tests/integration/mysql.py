@@ -28,6 +28,9 @@ class MysqlIntegrationTest(unittest.TestCase):
             'includeTables': {
                 'users': {
                     'seedSize': 100
+                },
+                'cities': {
+                    'seedSize': 2000
                 }
             }
         }
@@ -45,10 +48,16 @@ class MysqlIntegrationTest(unittest.TestCase):
         logger.info("Creating required test tables..")
         # Create test tables
         self.cursor = self.conn.cursor()
+        sql = """CREATE TABLE cities (
+                id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+                name  VARCHAR(20) NOT NULL)"""
+        self.cursor.execute(sql)
         sql = """CREATE TABLE users (
                 id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
                 first_name  VARCHAR(20) NOT NULL,
-                last_name  VARCHAR(20))"""
+                last_name  VARCHAR(20),
+                city_id INT,
+                CONSTRAINT fk_users_cities_city_id_id FOREIGN KEY (city_id) REFERENCES cities(id))"""
         self.cursor.execute(sql)
 
 
@@ -76,5 +85,5 @@ class MysqlIntegrationTest(unittest.TestCase):
         logger.debug("Tearing down class..")
 
         logger.info("Droping all tests tables..")
-        sql = "DROP TABLE users"
-        self.cursor.execute(sql)
+        self.cursor.execute("DROP TABLE users")
+        self.cursor.execute("DROP TABLE cities")

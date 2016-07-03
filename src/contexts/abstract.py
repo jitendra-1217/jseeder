@@ -1,11 +1,16 @@
 # All contexts must extend this class
 
+from src.seeders import Seeder
+
 class AbstractContext():
 
 
     def __init__(self, conn, inputConfig):
         self.conn = conn
         self.inputConfig = inputConfig
+
+        # Create seeder instance
+        self.seeder = Seeder()
 
         # Used as a temp storage of re-usable dicts
         self.cache = {}
@@ -17,6 +22,10 @@ class AbstractContext():
 
     def getInputConfig(self):
         return self.inputConfig
+
+
+    def getSeeder(self):
+        return self.seeder
 
 
     # --------------------

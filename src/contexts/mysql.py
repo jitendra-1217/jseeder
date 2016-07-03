@@ -7,6 +7,7 @@ class MysqlContext(AbstractContext):
 
     def __init__(self, conn, inputConfig):
         AbstractContext.__init__(self, conn, inputConfig)
+        self.seeder.setUpMySQLSeeders()
 
 
     def getCursor(self):

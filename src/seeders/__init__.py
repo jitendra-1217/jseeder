@@ -10,25 +10,33 @@
 from faker import Factory
 fake = Factory.create()
 
-# Import other modules
+
+class Seeder():
+
+    seedersMap = {
+        "fake.name":    fake.name,
+        "fake.address": fake.address,
+        "fake.text":    fake.text,
+        # More from fake-factor library can follow..
+    }
 
 
-
-seedersMap = {
-    "fake.name":    fake.name,
-    "fake.address": fake.address,
-    "fake.text":    fake.text
-    # More from fake-factor library can follow..
+    def __init__(self):
+        pass
 
 
-    # Functions from other modules can follow here..
-}
+    def callSeederFunc(self, fName, fArgsList=[]):
+
+        if fName in self.seedersMap:
+            return self.seedersMap[fName](*fArgsList)
+
+        raise Exception("Seeder func: {} - Not found".format(fName))
 
 
-# Util to call seeder funcs
-def callSeederFunc(fName, fArgsList=[]):
+    def setUpMySQLSeeders(self):
 
-    if fName in seedersMap:
-        return seedersMap[fName](*fArgsList)
-
-    raise Exception("Seeder func: {} - Not found".format(fName))
+        from src.seeders.mysql import MySQL
+        mysql = MySQL()
+        self.seedersMap.update({
+            "mysql.seedFromTableRef": mysql.seedFromTableRef
+        })
