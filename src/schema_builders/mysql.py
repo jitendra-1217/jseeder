@@ -60,6 +60,8 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
             elif tConfig.get("inclusionPolicy", "none") == "none":
                 del(tSchema[result["Field"]])
 
+        self.fixSeederArgs(tSchema, t)
+
         # Get references and update seeder and other field schema attrs
         cursor.execute("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '{}' AND TABLE_NAME = '{}'".format(database, t))
         results = cursor.fetchall()

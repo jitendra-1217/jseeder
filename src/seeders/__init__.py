@@ -14,15 +14,25 @@ fake = Factory.create()
 class Seeder():
 
     seedersMap = {
+        # Add a mapping for fake module here, if using
+        # Ref: http://fake-factory.readthedocs.io/en/latest/providers/faker.providers.address.html
         "fake.name":    fake.name,
+
+        "fake.street_address": fake.street_address,
         "fake.address": fake.address,
+
         "fake.text":    fake.text,
         # More from fake-factor library can follow..
     }
 
 
     def __init__(self):
-        pass
+        from src.seeders.j import J
+        j = J()
+        self.seedersMap.update({
+            "j.fromList":    j.fromList,
+            "j.fromBetween": j.fromBetween
+        })
 
 
     def callSeederFunc(self, fName, fArgsList=[]):

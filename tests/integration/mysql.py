@@ -27,19 +27,33 @@ class MysqlIntegrationTest(unittest.TestCase):
             "port":          3306,
             "includeTables": {
                 "users": {
-                    "seedSize":        100,
-                    "excludeFields":   ["last_name"],
+                    "seedSize":        10,
+                    "excludeFields":   ["middle_name"],
                     "inclusionPolicy": "all", # "all"/"none" - Include all/ none fields, default - "none"
                     "includeFields":   {
                         "first_name": {
-                            "seeder":     "fake.text",
-                            "seederArgs": [5]
+                            "seeder":     "j.fromList",
+                            "seederArgs": [["Jitendra", "Kumar", "Ojha"], True] #Second boolean args says if return serially (True) or randomly
+                        },
+                        "last_name": {
+                            "seeder":     "j.fromList",
+                            "seederArgs": [["Jitendra", "Kumar", "Ojha"], True]
+                        },
+                        "fav_num": {
+                            "seeder":     "j.fromBetween",
+                            "seederArgs": [0, 100, False]
                         }
                     }
                 },
                 "cities": {
                     "seedSize":        10,
-                    "inclusionPolicy": "all"
+                    "inclusionPolicy": "all",
+                    "includeFields":   {
+                        "name": {
+                            "seeder": "j.fromList",
+                            "seederArgs": [["Bangalore", "Patna"], True]
+                        }
+                    }
                 }
             }
         }
@@ -66,6 +80,7 @@ class MysqlIntegrationTest(unittest.TestCase):
                 first_name  VARCHAR(20) NOT NULL,
                 middle_name VARCHAR(20),
                 last_name  VARCHAR(20),
+                fav_num INT,
                 city_id INT,
                 CONSTRAINT fk_users_cities_city_id_id FOREIGN KEY (city_id) REFERENCES cities(id))"""
         self.cursor.execute(sql)
