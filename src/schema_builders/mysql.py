@@ -101,12 +101,33 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
 
     def _mapSeederByMysqlDatatype(self, type):
 
-        m = re.search("varchar\((.+?)\)", type)
+        # Char type fields
+        m = re.search("(.*?)char\((.+?)\)", type)
         if m:
-            return ("fake.text", [int(m.group(1))])
+            return ("fake.text", [int(m.group(2))])
+
+        # Int type fields
+        m = re.search("(.*?)int\((.+?)\)", type)
+        if m:
+            t = m.group(1)
+            if t == "tiny":
+                intMax = 1
+            elif t == "small":
+                intMax = 32767
+            elif t == "medium":
+                intMax = 8388607
+            elif t == "": # i.e. int
+                intMax = 2147483647
+            elif t == "big":
+                intMax = 9223372036854775807
+            else:
+                intMax = 1
+
+            return ("fake.random_int", [1, intMax])
 
         # Other regex might follow..
 
         # Otherwise returning something which will throw errors later.. :(
         # OR, Better should throw error here only
-        return (type, [])
+        # return (type, [])
+        raise Exception("No mapped seeder found for mysql data type: {}".format(type))

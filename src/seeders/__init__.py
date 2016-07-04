@@ -22,6 +22,8 @@ class Seeder():
         "fake.address": fake.address,
 
         "fake.text":    fake.text,
+
+        "fake.random_int": fake.random_int,
         # More from fake-factor library can follow..
     }
 
