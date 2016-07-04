@@ -19,18 +19,27 @@ class MysqlIntegrationTest(unittest.TestCase):
         logger.debug("Setting up class..")
 
         self.inputConfig = {
-            'engine':        'mysql',
-            'host':          'localhost',
-            'user':          'jseeder',
-            'database':      'jseeder',
-            'password':      'jseeder',
-            'port':          3306,
-            'includeTables': {
-                'users': {
-                    'seedSize': 100
+            "engine":        "mysql",
+            "host":          "localhost",
+            "user":          "jseeder",
+            "database":      "jseeder",
+            "password":      "jseeder",
+            "port":          3306,
+            "includeTables": {
+                "users": {
+                    "seedSize":        100,
+                    "excludeFields":   ["last_name"],
+                    "inclusionPolicy": "all", # "all"/"none" - Include all/ none fields, default - "none"
+                    "includeFields":   {
+                        "first_name": {
+                            "seeder":     "fake.text",
+                            "seederArgs": [5]
+                        }
+                    }
                 },
-                'cities': {
-                    'seedSize': 10
+                "cities": {
+                    "seedSize":        10,
+                    "inclusionPolicy": "all"
                 }
             }
         }
@@ -55,6 +64,7 @@ class MysqlIntegrationTest(unittest.TestCase):
         sql = """CREATE TABLE users (
                 id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
                 first_name  VARCHAR(20) NOT NULL,
+                middle_name VARCHAR(20),
                 last_name  VARCHAR(20),
                 city_id INT,
                 CONSTRAINT fk_users_cities_city_id_id FOREIGN KEY (city_id) REFERENCES cities(id))"""

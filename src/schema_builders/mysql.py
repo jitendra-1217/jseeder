@@ -42,9 +42,12 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
         cursor.execute("DESCRIBE {}".format(t))
         results = cursor.fetchall()
         for result in results:
-            # Ignore if the field is auto_increment type
+            # Ignore field cases..
             if result["Extra"] == "auto_increment":
                 continue
+            if result["Field"] in tConfig.get("excludeFields", []):
+                continue
+
             defSeeder, defSeederArgs = self._mapSeederByMysqlDatatype(result["Type"])
             tSchema[result["Field"]] = {
                 # Assign default seeder func mapped via mysql data types
@@ -52,6 +55,10 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
                 "seederArgs":   defSeederArgs,
                 "dependencies": {}
             }
+            if result["Field"] in tConfig.get("includeFields", []):
+                tSchema[result["Field"]].update(tConfig["includeFields"][result["Field"]])
+            elif tConfig.get("inclusionPolicy", "none") == "none":
+                del(tSchema[result["Field"]])
 
         # Get references and update seeder and other field schema attrs
         cursor.execute("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '{}' AND TABLE_NAME = '{}'".format(database, t))
