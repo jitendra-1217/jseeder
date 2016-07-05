@@ -48,17 +48,16 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
             if result["Field"] in tConfig.get("excludeFields", []):
                 continue
 
-            defSeeder, defSeederArgs = self._mapSeederByMysqlDatatype(result["Type"])
-            tSchema[result["Field"]] = {
-                # Assign default seeder func mapped via mysql data types
-                "seeder":       defSeeder,
-                "seederArgs":   defSeederArgs,
-                "dependencies": {}
-            }
-            if result["Field"] in tConfig.get("includeFields", []):
-                tSchema[result["Field"]].update(tConfig["includeFields"][result["Field"]])
-            elif tConfig.get("inclusionPolicy", "none") == "none":
-                del(tSchema[result["Field"]])
+            if tConfig.get("inclusionPolicy", "none") == "all" or result["Field"] in tConfig.get("includeFields", []):
+                defSeeder, defSeederArgs = self._mapSeederByMysqlDatatype(result["Type"])
+                tSchema[result["Field"]] = {
+                    # Assign default seeder func mapped via mysql data types
+                    "seeder":       defSeeder,
+                    "seederArgs":   defSeederArgs,
+                    "dependencies": {}
+                }
+                if result["Field"] in tConfig.get("includeFields", []):
+                    tSchema[result["Field"]].update(tConfig["includeFields"][result["Field"]])
 
         self.fixSeederArgs(tSchema, t)
 
@@ -70,17 +69,22 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
             if result["COLUMN_NAME"] not in tSchema:
                 continue
             # Update seeder, seederArgs and dependencies
-            tSchema[result["COLUMN_NAME"]]["dependencies"] = {
-                "table": result["REFERENCED_TABLE_NAME"],
-                "field": result["REFERENCED_COLUMN_NAME"]
-            }
+
+            # Fixes: Self referencing tables leading to infinite loop while resolving dependencies
+            # Alternatives: If such tables needed to be seeded:
+            #   - run seeder twice with different input
+            #   - have the same table twice in same config with appropriate seedSize
+            if result["REFERENCED_TABLE_NAME"] != t:
+                tSchema[result["COLUMN_NAME"]]["dependencies"] = {
+                    "table": result["REFERENCED_TABLE_NAME"],
+                    "field": result["REFERENCED_COLUMN_NAME"]
+                }
             tSchema[result["COLUMN_NAME"]]["seeder"] = "mysql.seedFromTableRef"
             tSchema[result["COLUMN_NAME"]]["seederArgs"] = [result["REFERENCED_TABLE_NAME"], result["REFERENCED_COLUMN_NAME"]]
 
         return tSchema
 
 
-    # BUG: Self referencing tables leading to infinite loop while resolving dependencies
     def _getOrderedByDependency(self, tSchema):
 
         tOrder = {}
@@ -123,7 +127,7 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
             else:
                 intMax = 1
 
-            return ("fake.random_int", [1, intMax])
+            return ("fake.random_int", [0, intMax])
 
 
         # TODOs:
