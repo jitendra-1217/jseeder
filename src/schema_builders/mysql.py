@@ -106,7 +106,7 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
         if m:
             return ("fake.text", [int(m.group(2))])
 
-        # Int type fields
+        # Int type fields (Limits per signed range for safety)
         m = re.search("(.*?)int\((.+?)\)", type)
         if m:
             t = m.group(1)
@@ -124,6 +124,10 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
                 intMax = 1
 
             return ("fake.random_int", [1, intMax])
+
+
+        # TODOs:
+        # 1. Handle datetime, longtext, double, timestamp, year
 
         # Other regex might follow..
 
