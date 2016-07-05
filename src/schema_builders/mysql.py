@@ -42,16 +42,24 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
         cursor.execute("DESCRIBE {}".format(t))
         results = cursor.fetchall()
         for result in results:
-            # Ignore if the field is auto_increment type
+            # Ignore field cases..
             if result["Extra"] == "auto_increment":
                 continue
-            defSeeder, defSeederArgs = self._mapSeederByMysqlDatatype(result["Type"])
-            tSchema[result["Field"]] = {
-                # Assign default seeder func mapped via mysql data types
-                "seeder":       defSeeder,
-                "seederArgs":   defSeederArgs,
-                "dependencies": {}
-            }
+            if result["Field"] in tConfig.get("excludeFields", []):
+                continue
+
+            if tConfig.get("inclusionPolicy", "none") == "all" or result["Field"] in tConfig.get("includeFields", []):
+                defSeeder, defSeederArgs = self._mapSeederByMysqlDatatype(result["Type"])
+                tSchema[result["Field"]] = {
+                    # Assign default seeder func mapped via mysql data types
+                    "seeder":       defSeeder,
+                    "seederArgs":   defSeederArgs,
+                    "dependencies": {}
+                }
+                if result["Field"] in tConfig.get("includeFields", []):
+                    tSchema[result["Field"]].update(tConfig["includeFields"][result["Field"]])
+
+        self.fixSeederArgs(tSchema, t)
 
         # Get references and update seeder and other field schema attrs
         cursor.execute("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '{}' AND TABLE_NAME = '{}'".format(database, t))
@@ -61,17 +69,22 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
             if result["COLUMN_NAME"] not in tSchema:
                 continue
             # Update seeder, seederArgs and dependencies
-            tSchema[result["COLUMN_NAME"]]["dependencies"] = {
-                "table": result["REFERENCED_TABLE_NAME"],
-                "field": result["REFERENCED_COLUMN_NAME"]
-            }
+
+            # Fixes: Self referencing tables leading to infinite loop while resolving dependencies
+            # Alternatives: If such tables needed to be seeded:
+            #   - run seeder twice with different input
+            #   - have the same table twice in same config with appropriate seedSize
+            if result["REFERENCED_TABLE_NAME"] != t:
+                tSchema[result["COLUMN_NAME"]]["dependencies"] = {
+                    "table": result["REFERENCED_TABLE_NAME"],
+                    "field": result["REFERENCED_COLUMN_NAME"]
+                }
             tSchema[result["COLUMN_NAME"]]["seeder"] = "mysql.seedFromTableRef"
             tSchema[result["COLUMN_NAME"]]["seederArgs"] = [result["REFERENCED_TABLE_NAME"], result["REFERENCED_COLUMN_NAME"]]
 
         return tSchema
 
 
-    # BUG: Self referencing tables leading to infinite loop while resolving dependencies
     def _getOrderedByDependency(self, tSchema):
 
         tOrder = {}
@@ -92,12 +105,37 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
 
     def _mapSeederByMysqlDatatype(self, type):
 
-        m = re.search("varchar\((.+?)\)", type)
+        # Char type fields
+        m = re.search("(.*?)char\((.+?)\)", type)
         if m:
-            return ("fake.text", [int(m.group(1))])
+            return ("fake.text", [int(m.group(2))])
+
+        # Int type fields (Limits per signed range for safety)
+        m = re.search("(.*?)int\((.+?)\)", type)
+        if m:
+            t = m.group(1)
+            if t == "tiny":
+                intMax = 1
+            elif t == "small":
+                intMax = 32767
+            elif t == "medium":
+                intMax = 8388607
+            elif t == "": # i.e. int
+                intMax = 2147483647
+            elif t == "big":
+                intMax = 9223372036854775807
+            else:
+                intMax = 1
+
+            return ("fake.random_int", [0, intMax])
+
+
+        # TODOs:
+        # 1. Handle datetime, longtext, double, timestamp, year
 
         # Other regex might follow..
 
         # Otherwise returning something which will throw errors later.. :(
         # OR, Better should throw error here only
-        return (type, [])
+        # return (type, [])
+        raise Exception("No mapped seeder found for mysql data type: {}".format(type))
