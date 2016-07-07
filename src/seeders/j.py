@@ -10,7 +10,7 @@ class J():
         pass
 
 
-    def fromList(self, l, inSerial=False, k=""):
+    def fromList(self, l, inSerial=True, k=""):
         if not inSerial:
             return random.choice(l)
         # Returns l elements in serial on every call "per" k
@@ -22,5 +22,5 @@ class J():
         return l[i%lLen]
 
 
-    def fromBetween(self, i, j, inSerial=False, k=""):
-        return self.fromList(range(i, j), inSerial, k)
+    def fromBetween(self, i, j, inSerial=True, k=""):
+        return self.fromList(range(i, j + 1), inSerial, k)

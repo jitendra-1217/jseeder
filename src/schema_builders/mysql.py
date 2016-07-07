@@ -59,7 +59,7 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
                     "field": result["REFERENCED_COLUMN_NAME"]
                 }
             tSchema[result["COLUMN_NAME"]]["seeder"] = "mysql.seedFromTableRef"
-            tSchema[result["COLUMN_NAME"]]["seederArgs"] = [result["REFERENCED_TABLE_NAME"], result["REFERENCED_COLUMN_NAME"]]
+            tSchema[result["COLUMN_NAME"]]["seederArgs"] = {"table": result["REFERENCED_TABLE_NAME"], "field": result["REFERENCED_COLUMN_NAME"]}
 
         return tSchema
 

@@ -30,9 +30,9 @@ class Seeder():
         })
 
 
-    def callSeederFunc(self, fName, fArgsList=[]):
+    def callSeederFunc(self, fName, fArgsList={}):
         if fName in self.seedersMap:
-            return self.seedersMap[fName](*fArgsList)
+            return self.seedersMap[fName](**fArgsList) if isinstance(fArgsList, dict) else self.seedersMap[fName](*fArgsList)
 
         raise Exception("Seeder func: {} - Not found".format(fName))
 

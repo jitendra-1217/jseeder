@@ -31,15 +31,25 @@ class MysqlIntegrationTest(unittest.TestCase):
                     "includeFields":   {
                         "first_name": {
                             "seeder":     "j.fromList",
-                            "seederArgs": [["Jitendra", "Kumar", "Ojha"], True] #Second boolean args says if return serially (True) or randomly
+                            "seederArgs":  {
+                                "l": ["jitendra", "kumar", "ojha"],
+                                "inSerial": True
+                            }
                         },
                         "last_name": {
                             "seeder":     "j.fromList",
-                            "seederArgs": [["Jitendra", "Kumar", "Ojha"], True]
+                            "seederArgs":  {
+                                "l": ["jitendra", "kumar", "ojha"],
+                                "inSerial": True
+                            }
                         },
                         "fav_num": {
                             "seeder":     "j.fromBetween",
-                            "seederArgs": [0, 100, False]
+                            "seederArgs":  {
+                                "i": 0,
+                                "j": 3,
+                                "inSerial": True
+                            }
                         }
                     }
                 },
@@ -49,7 +59,10 @@ class MysqlIntegrationTest(unittest.TestCase):
                     "includeFields":   {
                         "name": {
                             "seeder": "j.fromList",
-                            "seederArgs": [["Bangalore", "Patna"], True]
+                            "seederArgs":  {
+                                "l": ["Bangalore", "Patna"],
+                                "inSerial": True
+                            }
                         }
                     }
                 }
