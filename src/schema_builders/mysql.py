@@ -28,24 +28,28 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
     def _getSchemaForTable(self, cursor, database, t, tConfig):
 
         tSchema = {}
+        includeFields = tConfig.get("includeFields", [])
         # (1) Handle what column to include/exclude and with input seeder args
         # (2) Assingn default seeders for tables' columns
         cursor.execute("DESCRIBE {}".format(t))
         results = cursor.fetchall()
         for result in results:
-            if result["Extra"] == "auto_increment":
+            if result["Extra"] == "auto_increment" or result["Field"] in tConfig.get("excludeFields", []):
                 continue
-            if result["Field"] in tConfig.get("excludeFields", []):
-                continue
-            if tConfig.get("inclusionPolicy", "none") == "all" or result["Field"] in tConfig.get("includeFields", []):
-                defSeeder, defSeederArgs = self._mapSeederByMysqlDatatype(result["Type"])
+            if tConfig.get("inclusionPolicy", "none") == "all" or result["Field"] in includeFields:
                 tSchema[result["Field"]] = {
-                    "seeder":       defSeeder,
-                    "seederArgs":   defSeederArgs,
+                    "seeder":       "",
+                    "seederArgs":   {},
                     "dependencies": {}
                 }
-                if result["Field"] in tConfig.get("includeFields", []):
-                    tSchema[result["Field"]].update(tConfig["includeFields"][result["Field"]])
+                if result["Field"] in includeFields and "seeder" not in includeFields[result["Field"]]:
+                    defSeeder, defSeederArgs = self._mapSeederByMysqlDatatype(result["Type"])
+                    tSchema[result["Field"]].update({
+                        "seeder":       defSeeder,
+                        "seederArgs":   defSeederArgs
+                    })
+                if result["Field"] in includeFields:
+                    tSchema[result["Field"]].update(includeFields[result["Field"]])
         self.fixSeederArgs(tSchema, t)
         # (3) Find and put the foreign key dependencies for every table's columns
         cursor.execute("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '{}' AND TABLE_NAME = '{}'".format(database, t))
@@ -58,8 +62,9 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
                     "table": result["REFERENCED_TABLE_NAME"],
                     "field": result["REFERENCED_COLUMN_NAME"]
                 }
+            # Forcing to use mysql.seedFromTableRef, seederArgs from input config will be used though
             tSchema[result["COLUMN_NAME"]]["seeder"] = "mysql.seedFromTableRef"
-            tSchema[result["COLUMN_NAME"]]["seederArgs"] = {"table": result["REFERENCED_TABLE_NAME"], "field": result["REFERENCED_COLUMN_NAME"]}
+            tSchema[result["COLUMN_NAME"]]["seederArgs"].update({"table": result["REFERENCED_TABLE_NAME"], "field": result["REFERENCED_COLUMN_NAME"]})
 
         return tSchema
 

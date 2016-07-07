@@ -48,7 +48,14 @@ class MysqlIntegrationTest(unittest.TestCase):
                             "seederArgs":  {
                                 "i": 0,
                                 "j": 3,
-                                "inSerial": True
+                                "inSerial": False
+                            }
+                        },
+                        "city_id": {
+                            "seederArgs": {
+                                "inSerial": True,
+                                "offset":   3,
+                                "limit":    5
                             }
                         }
                     }
