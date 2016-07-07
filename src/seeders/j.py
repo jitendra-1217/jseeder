@@ -3,19 +3,18 @@ import random
 
 from src.utils import cache
 
-# A custom class: Includes some seeders not easily available in faker lib
+
 class J():
 
     def __init__(self):
         pass
 
 
-    def fromList(self, l, inSerial=False, k=""):
-
+    def fromList(self, l, inSerial=True, k=""):
         if not inSerial:
             return random.choice(l)
-
-        # Returns l elements in serial on every call "per" k
+        # TODO (3): Following should go in some utility file
+        #           Used in seeders/mysql.py also
         k += "J__fromList"
         i = cache.getCacheKey(k, 0)
         cache.setCacheKey(k, i + 1)
@@ -24,6 +23,5 @@ class J():
         return l[i%lLen]
 
 
-    def fromBetween(self, i, j, inSerial=False, k=""):
-
-        return self.fromList(range(i, j), inSerial, k)
+    def fromBetween(self, i, j, inSerial=True, k=""):
+        return self.fromList(range(i, j + 1), inSerial, k)

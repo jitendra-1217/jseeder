@@ -26,7 +26,7 @@ def getCliHelpText():
 def parseOptions(argv):
 
     # Intialize defaults
-    inputFile = "/home/vagrant/jseeder/src/configs/input/sample.yaml"
+    inputFile = None
 
     try:
         options, args = getopt.getopt(argv, "hi:", ["inputFile="])
@@ -40,6 +40,9 @@ def parseOptions(argv):
             sys.exit()
         elif option in ("-i", "--inputFile"):
             inputFile = arg
+
+    if not inputFile:
+        raise Exception('-i/--inputFile is required')
 
     logger.debug("Input file: {}".format(inputFile))
 

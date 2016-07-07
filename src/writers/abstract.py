@@ -7,6 +7,6 @@ class AbstractWriter():
         self.ctx = ctx
 
 
-    # Does bulk writing of documents to the engine
     def doBulkWrite(self):
+        # Does bulk writing of documents to the engine
         raise NotImplementedError

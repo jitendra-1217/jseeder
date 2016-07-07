@@ -3,8 +3,6 @@ import unittest
 
 def suite():
     suite = unittest.TestSuite()
-
-    # Adding all tests
     from tests.integration.mysql import MysqlIntegrationTest
     suite.addTests(map(MysqlIntegrationTest, ["testMysqlSeeder"]))
 

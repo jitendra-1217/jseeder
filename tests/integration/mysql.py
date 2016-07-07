@@ -15,9 +15,7 @@ class MysqlIntegrationTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-
         logger.debug("Setting up class..")
-
         self.inputConfig = {
             "engine":        "mysql",
             "host":          "localhost",
@@ -33,15 +31,32 @@ class MysqlIntegrationTest(unittest.TestCase):
                     "includeFields":   {
                         "first_name": {
                             "seeder":     "j.fromList",
-                            "seederArgs": [["Jitendra", "Kumar", "Ojha"], True] #Second boolean args says if return serially (True) or randomly
+                            "seederArgs":  {
+                                "l": ["jitendra", "kumar", "ojha"],
+                                "inSerial": True
+                            }
                         },
                         "last_name": {
                             "seeder":     "j.fromList",
-                            "seederArgs": [["Jitendra", "Kumar", "Ojha"], True]
+                            "seederArgs":  {
+                                "l": ["jitendra", "kumar", "ojha"],
+                                "inSerial": True
+                            }
                         },
                         "fav_num": {
                             "seeder":     "j.fromBetween",
-                            "seederArgs": [0, 100, False]
+                            "seederArgs":  {
+                                "i": 0,
+                                "j": 3,
+                                "inSerial": False
+                            }
+                        },
+                        "city_id": {
+                            "seederArgs": {
+                                "inSerial": True,
+                                "offset":   3,
+                                "limit":    5
+                            }
                         }
                     }
                 },
@@ -51,15 +66,16 @@ class MysqlIntegrationTest(unittest.TestCase):
                     "includeFields":   {
                         "name": {
                             "seeder": "j.fromList",
-                            "seederArgs": [["Bangalore", "Patna"], True]
+                            "seederArgs":  {
+                                "l": ["Bangalore", "Patna"],
+                                "inSerial": True
+                            }
                         }
                     }
                 }
             }
         }
         logger.info("Using following input config:\n{}".format(json.dumps(self.inputConfig)))
-
-        # At this point ensure above db is created already
         self.conn = MySQLdb.connect(
             self.inputConfig["host"],
             self.inputConfig["user"],
@@ -67,9 +83,7 @@ class MysqlIntegrationTest(unittest.TestCase):
             self.inputConfig["database"],
             self.inputConfig["port"]
         )
-
         logger.info("Creating required test tables..")
-        # Create test tables
         self.cursor = self.conn.cursor()
         sql = """CREATE TABLE cities (
                 id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
@@ -87,28 +101,22 @@ class MysqlIntegrationTest(unittest.TestCase):
 
 
     def testMysqlSeeder(self):
-
         logger.info("Initializing mysql integration testing components..")
-
         ctx = Context(self.conn, self.inputConfig)
         orderInfo, schemaForDatagen = SchemaBuilder(ctx).getSchemaForDataGen()
         logger.debug("Schema for data generation:\n{}".format(json.dumps(schemaForDatagen)))
         logger.debug("Will be worked in order:\n{}".format(json.dumps(orderInfo)))
-
         writer = Writer(ctx)
         dataGen = DataGen(ctx)
-
         for results in dataGen.generate(schemaForDatagen, orderInfo):
             logger.info("Writing {} documents into {}..".format(len(results["docs"]), results["table"]))
             writer.doBulkWrite(results["table"], results["docs"])
-
         logger.info("Finally, Done with it!")
 
 
     @classmethod
     def tearDownClass(self):
         logger.debug("Tearing down class..")
-
         logger.info("Droping all tests tables..")
         self.cursor.execute("DROP TABLE users")
         self.cursor.execute("DROP TABLE cities")

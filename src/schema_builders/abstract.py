@@ -16,9 +16,7 @@ class AbstractSchemaBuilder():
         raise NotImplementedError
 
 
-    # Fixes seederArgs for every field in tSchema:
     # Handles specific cases for few seeders
-    #   - Adds additional seederArgs payload if required
     def fixSeederArgs(self, tSchema, t):
 
         for f, fSchema in tSchema.items():
@@ -26,4 +24,5 @@ class AbstractSchemaBuilder():
             # (1) Adding key - "table__field" as last argument for seeder to keep track of serial returns
             #    per table's field seed call
             if fSchema["seeder"] in ["j.fromList", "j.fromBetween"]:
-                fSchema["seederArgs"].append("{}__{}".format(t, f))
+                if isinstance(fSchema["seederArgs"], dict):
+                    fSchema["seederArgs"]["k"] = "{}__{}".format(t, f)
