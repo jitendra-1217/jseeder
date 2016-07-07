@@ -10,17 +10,8 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
         AbstractSchemaBuilder.__init__(self, ctx)
 
 
-    # It returns a schema dict which will be used to by DataGen to
-    # generate fake data.
-    # The schema is expected to have:
-    #     - List of tables schema sorted by dependencies.
-    #       Eg. If table A references a column in table B, table B would be first to get seeded.
-    #       Also how many rows to be seeded and other few metas.
-    #     - Each tables have - list of keys with their schema
-    #     - Each key schema tells:
-    #         - What seeder to use
-    #         - And arguments required for the seeder (Must be ensured via code)
     def getSchemaForDataGen(self):
+        # It returns a schema dict which DataGen will use with seeders to generate fake data
 
         ctx = self.getCtx()
         cursor = ctx.getCursor()
@@ -37,43 +28,31 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
     def _getSchemaForTable(self, cursor, database, t, tConfig):
 
         tSchema = {}
-
-        # Get all table fields with their meta
+        # (1) Handle what column to include/exclude and with input seeder args
+        # (2) Assingn default seeders for tables' columns
         cursor.execute("DESCRIBE {}".format(t))
         results = cursor.fetchall()
         for result in results:
-            # Ignore field cases..
             if result["Extra"] == "auto_increment":
                 continue
             if result["Field"] in tConfig.get("excludeFields", []):
                 continue
-
             if tConfig.get("inclusionPolicy", "none") == "all" or result["Field"] in tConfig.get("includeFields", []):
                 defSeeder, defSeederArgs = self._mapSeederByMysqlDatatype(result["Type"])
                 tSchema[result["Field"]] = {
-                    # Assign default seeder func mapped via mysql data types
                     "seeder":       defSeeder,
                     "seederArgs":   defSeederArgs,
                     "dependencies": {}
                 }
                 if result["Field"] in tConfig.get("includeFields", []):
                     tSchema[result["Field"]].update(tConfig["includeFields"][result["Field"]])
-
         self.fixSeederArgs(tSchema, t)
-
-        # Get references and update seeder and other field schema attrs
+        # (3) Find and put the foreign key dependencies for every table's columns
         cursor.execute("SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '{}' AND TABLE_NAME = '{}'".format(database, t))
         results = cursor.fetchall()
         for result in results:
-            # Ignore if the column is not already in schema
             if result["COLUMN_NAME"] not in tSchema:
                 continue
-            # Update seeder, seederArgs and dependencies
-
-            # Fixes: Self referencing tables leading to infinite loop while resolving dependencies
-            # Alternatives: If such tables needed to be seeded:
-            #   - run seeder twice with different input
-            #   - have the same table twice in same config with appropriate seedSize
             if result["REFERENCED_TABLE_NAME"] != t:
                 tSchema[result["COLUMN_NAME"]]["dependencies"] = {
                     "table": result["REFERENCED_TABLE_NAME"],
@@ -86,12 +65,13 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
 
 
     def _getOrderedByDependency(self, tSchema):
+        # (1) Resolve foreign key dependencies for doing seeding in proper order,
+        #     Returns order dict along with schema
 
         tOrder = {}
         includeTables = tSchema.keys()
         tMap = {t: False for t in includeTables}
         tLen = len(includeTables)
-
         while tLen > 0:
             for t in includeTables:
                 td = [v["dependencies"]["table"] for f, v in tSchema[t].items() if "table" in v["dependencies"]]
@@ -104,6 +84,7 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
 
 
     def _mapSeederByMysqlDatatype(self, type):
+        # (1) Returns default seeder for mysql data type
 
         # Char type fields
         m = re.search("(.*?)char\((.+?)\)", type)
@@ -129,13 +110,6 @@ class MysqlSchemaBuilder(AbstractSchemaBuilder):
 
             return ("fake.random_int", [0, intMax])
 
+        # TODO (1): Handle following mysql datatypes: datetime, longtext, double, timestamp & year
 
-        # TODOs:
-        # 1. Handle datetime, longtext, double, timestamp, year
-
-        # Other regex might follow..
-
-        # Otherwise returning something which will throw errors later.. :(
-        # OR, Better should throw error here only
-        # return (type, [])
         raise Exception("No mapped seeder found for mysql data type: {}".format(type))

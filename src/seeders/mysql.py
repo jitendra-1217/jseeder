@@ -13,10 +13,8 @@ class MySQL():
 
 
     def seedFromTableRef(self, table, field):
-
         cacheKey = "seedFromTableRef___{}___{}".format(table, field)
         hit      = cache.getCacheKey(cacheKey)
-
         if not hit:
             logger.debug("Queries into table for {}".format(cacheKey))
             self.cursor.execute("SELECT {} FROM {}".format(field, table))

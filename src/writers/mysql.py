@@ -12,18 +12,14 @@ class MysqlWriter(AbstractWriter):
 
     @tryCatchWrapper
     def doBulkWrite(self, table, docs):
-
         if len(docs) == 0:
             logger.warnings("No docs to do write")
             return
-
-        # Preparing build insert query
-        # Will output something like - INSERT INTO users (first_name, last_name) VALUES (%(first_name)s, %(last_name)s)
+        # Preparing build insert query, e.g. INSERT INTO users (first_name, last_name) VALUES (%(first_name)s, %(last_name)s)
         keys       = docs[0].keys()
         keysRepl   = ", ".join(keys)
         valuesRepl = ", ".join(["%(" + k + ")s" for k in keys])
         sql        = "INSERT INTO {} ({}) VALUES ({})".format(table, keysRepl, valuesRepl)
 
-        cursor = self.ctx.getCursor()
-        cursor.executemany(sql, docs)
+        self.ctx.getCursor().executemany(sql, docs)
         self.ctx.getConn().commit()

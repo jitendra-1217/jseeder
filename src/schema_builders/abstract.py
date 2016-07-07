@@ -16,9 +16,7 @@ class AbstractSchemaBuilder():
         raise NotImplementedError
 
 
-    # Fixes seederArgs for every field in tSchema:
     # Handles specific cases for few seeders
-    #   - Adds additional seederArgs payload if required
     def fixSeederArgs(self, tSchema, t):
 
         for f, fSchema in tSchema.items():
