@@ -13,7 +13,8 @@ class J():
     def fromList(self, l, inSerial=True, k=""):
         if not inSerial:
             return random.choice(l)
-        # Returns l elements in serial on every call "per" k
+        # TODO (3): Following should go in some utility file
+        #           Used in seeders/mysql.py also
         k += "J__fromList"
         i = cache.getCacheKey(k, 0)
         cache.setCacheKey(k, i + 1)

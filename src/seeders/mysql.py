@@ -20,6 +20,8 @@ class MySQL():
             self.cursor.execute("SELECT {} FROM {} LIMIT {}, {}".format(field, table, offset, limit))
             hit = [result[field] for result in self.cursor.fetchall()]
             cache.setCacheKey(cacheKey, hit)
+        # TODO (3): Following should go in some utility file
+        #           Used in seeders/j.py also
         if not inSerial:
             return random.choice(hit)
         k = "MySQL__seedFromTableRef__{}__{}".format(table, field)
