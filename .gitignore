@@ -5,3 +5,4 @@ venv
 # Ignore python compiled files
 *.pyc
 *.pyo
+unmanaged/notes.txt
